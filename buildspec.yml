@@ -1,14 +1,20 @@
 version: 0.2
 
+env:
+  variables:
+    REPOSITORY_URI: 940482450120.dkr.ecr.ap-south-1.amazonaws.com/my-react-app
+    IMAGE_TAG: latest
+
 phases:
   pre_build:
     commands:
       - echo Logging in to Amazon ECR...
       - aws ecr get-login-password --region ap-south-1 | docker login --username AWS --password-stdin 940482450120.dkr.ecr.ap-south-1.amazonaws.com
+
   build:
     commands:
       - echo Build started on `date`
-      - docker build -t 940482450120.dkr.ecr.ap-south-1.amazonaws.com/my-react-app:latest .
+      - docker build -t $REPOSITORY_URI:$IMAGE_TAG .
 
   post_build:
     commands:
@@ -17,9 +23,8 @@ phases:
       - docker push $REPOSITORY_URI:$IMAGE_TAG
       - docker push $REPOSITORY_URI:latest
       - echo Writing image definitions file...
-      - printf '[{"name":"React","imageUri":"%s"}]' $REPOSITORY_URI:latest > imagedefinitions.json
+      - printf '[{"name":"my-react-app","imageUri":"%s"}]' $REPOSITORY_URI:latest > imagedefinitions.json
 
 artifacts:
   files:
     - imagedefinitions.json
-
