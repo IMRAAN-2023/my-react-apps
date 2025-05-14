@@ -1,5 +1,5 @@
 # Dockerfile
-FROM node:18-alpine as build
+FROM public.ecr.aws/nginx/nginx:stable-alpine
 WORKDIR /app
 COPY . .
 RUN npm install
