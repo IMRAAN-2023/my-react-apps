@@ -9,11 +9,12 @@ phases:
     commands:
       - echo Build started on `date`
       - docker build -t 940482450120.dkr.ecr.ap-south-1.amazonaws.com/my-react-app:latest .
+
   post_build:
     commands:
       - echo Build completed on `date`
-      - docker push 940482450120.dkr.ecr.ap-south-1.amazonaws.com/my-react-app:latest
-      - printf '[{"name":"my-react-app","imageUri":"940482450120.dkr.ecr.ap-south-1.amazonaws.com/my-react-app:latest"}]' > imagedefinitions.json
+      - echo Writing image definitions file...
+      - printf '[{"name":"React","imageUri":"%s"}]' $REPOSITORY_URI:latest > imagedefinitions.json
 
 artifacts:
   files:
