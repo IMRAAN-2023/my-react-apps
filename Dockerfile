@@ -1,17 +1,13 @@
-# Stage 1: Build React App
-FROM node:18-alpine AS builder
+# Stage 1: Build React app
+FROM public.ecr.aws/docker/library/node:18-alpine AS build
 WORKDIR /app
-
-# Install dependencies with cache leverage
 COPY package*.json ./
-RUN npm ci --only=production
-
-# Copy app source and build
+RUN npm install
 COPY . .
 RUN npm run build
 
 # Stage 2: Serve with Nginx
-FROM nginx:stable-alpine
-COPY --from=builder /app/build /usr/share/nginx/html
+FROM public.ecr.aws/nginx/nginx:stable-alpine
+COPY --from=build /app/build /usr/share/nginx/html
 EXPOSE 80
 CMD ["nginx", "-g", "daemon off;"]
