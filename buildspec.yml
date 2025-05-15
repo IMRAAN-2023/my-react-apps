@@ -3,28 +3,39 @@ version: 0.2
 env:
   variables:
     REPOSITORY_URI: 940482450120.dkr.ecr.ap-south-1.amazonaws.com/my-react-app
+    IMAGE_TAG: latest
 
 phases:
+  install:
+    runtime-versions:
+      nodejs: 18
+    commands:
+      - echo Installing latest npm...
+      - npm install -g npm@latest
+
   pre_build:
     commands:
-      - echo Logging in to Amazon ECR...
+      - echo Logging into Amazon ECR...
       - aws ecr get-login-password --region ap-south-1 | docker login --username AWS --password-stdin $REPOSITORY_URI
-      - export IMAGE_TAG=$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | cut -c 1-7)
-      - echo "IMAGE_TAG=$IMAGE_TAG"
+      - echo Pulling latest image for cache...
+      - docker pull $REPOSITORY_URI:$IMAGE_TAG || true
 
   build:
     commands:
-      - echo Build started on `date`
-      - docker build -t $REPOSITORY_URI:$IMAGE_TAG .
+      - echo Building Docker image...
+      - docker build --cache-from $REPOSITORY_URI:$IMAGE_TAG -t $REPOSITORY_URI:$IMAGE_TAG .
 
   post_build:
     commands:
-      - echo Build completed on `date`
-      - echo Pushing the Docker image...
+      - echo Pushing Docker image to ECR...
       - docker push $REPOSITORY_URI:$IMAGE_TAG
-      - echo Writing imagedefinitions.json...
+      - echo Writing imagedefinitions.json file...
       - printf '[{"name":"my-react-app","imageUri":"%s"}]' $REPOSITORY_URI:$IMAGE_TAG > imagedefinitions.json
 
 artifacts:
   files:
     - imagedefinitions.json
+
+cache:
+  paths:
+    - '/root/.npm/**/*'
